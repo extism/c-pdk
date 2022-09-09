@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-typedef unsigned long size_t;
-
 #define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
 
 IMPORT("env", "extism_input_offset") extern uint64_t extism_input_offset();
@@ -47,11 +45,11 @@ extern uint64_t extism_load_u64(uint64_t);
 IMPORT("env", "extism_http_request")
 extern uint64_t extism_http_request(uint64_t, uint64_t);
 
-static void extism_load(uint64_t offs, uint8_t *buffer, size_t length) {
+static void extism_load(uint64_t offs, uint8_t *buffer, uint64_t length) {
   uint64_t n;
-  size_t left = 0;
+  uint64_t left = 0;
 
-  for (size_t i = 0; i < length; i += 1) {
+  for (uint64_t i = 0; i < length; i += 1) {
     left = length - i;
     if (left < 8) {
       buffer[i] = extism_load_u8(offs + i);
@@ -64,10 +62,11 @@ static void extism_load(uint64_t offs, uint8_t *buffer, size_t length) {
   }
 }
 
-static void extism_store(uint64_t offs, const uint8_t *buffer, size_t length) {
+static void extism_store(uint64_t offs, const uint8_t *buffer,
+                         uint64_t length) {
   uint64_t n;
-  size_t left = 0;
-  for (size_t i = 0; i < length; i++) {
+  uint64_t left = 0;
+  for (uint64_t i = 0; i < length; i++) {
     left = length - i;
     if (left < 8) {
       extism_store_u8(offs + i, buffer[i]);
