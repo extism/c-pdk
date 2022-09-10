@@ -4,10 +4,16 @@
 
 #define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
 
-IMPORT("env", "extism_input_offset") extern uint64_t extism_input_offset();
+IMPORT("env", "extism_input_length") extern uint64_t extism_input_length();
 IMPORT("env", "extism_length") extern uint64_t extism_length(uint64_t);
 IMPORT("env", "extism_alloc") extern uint64_t extism_alloc(uint64_t);
 IMPORT("env", "extism_free") extern void extism_free(uint64_t);
+
+IMPORT("env", "extism_input_load_u8")
+extern uint8_t extism_input_load_u8(uint64_t);
+
+IMPORT("env", "extism_input_load_u64")
+extern uint64_t extism_input_load_u64(uint64_t);
 
 IMPORT("env", "extism_output_set")
 extern void extism_output_set(uint64_t, uint64_t);
@@ -57,6 +63,23 @@ static void extism_load(uint64_t offs, uint8_t *buffer, uint64_t length) {
     }
 
     n = extism_load_u64(offs + i);
+    *((uint64_t *)buffer + (i / 8)) = n;
+    i += 7;
+  }
+}
+
+static void extism_load_input(uint8_t *buffer, uint64_t length) {
+  uint64_t n;
+  uint64_t left = 0;
+
+  for (uint64_t i = 0; i < length; i += 1) {
+    left = length - i;
+    if (left < 8) {
+      buffer[i] = extism_input_load_u8(i);
+      continue;
+    }
+
+    n = extism_input_load_u64(i);
     *((uint64_t *)buffer + (i / 8)) = n;
     i += 7;
   }
