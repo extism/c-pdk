@@ -15,7 +15,7 @@ jobs:
         uses: mymindstorm/setup-emsdk@v11
         with:
           version: latest
-          # actions-cache-folder: "emsdk-cache"
+          actions-cache-folder: emsdk-cache-${{ matrix.os }}
 
       - name: Verify emcc install
         run: emcc -v
