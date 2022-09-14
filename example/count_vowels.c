@@ -1,5 +1,7 @@
 #include "../extism-pdk.h"
 
+#include <stdio.h>
+
 int32_t count_vowels()
 {
   uint64_t length = extism_input_length();
