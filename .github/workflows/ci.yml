@@ -18,17 +18,13 @@ jobs:
           path: emsdk
 
       - name: Install emcc compiler
-        run: |
-          pushd emsdk
-          ./emsdk install latest
-          ./emsdk activate latest
-          source ./emsdk_env.sh
+        uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: latest
+          actions-cache-folder: "emsdk-cache"
 
-          emsdk install emscripten-main-64bit
-          emsdk activate emscripten-main-64bit
-
-          emcc -v
-          popd
+      - name: Verify emcc install
+        run: emcc -v
 
       - name: Setup Python env
         uses: actions/setup-python@v4
