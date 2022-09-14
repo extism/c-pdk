@@ -1,0 +1,55 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test-example:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install emcc compiler
+        uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: latest
+          actions-cache-folder: "emsdk-cache"
+
+      - name: Verify emcc install
+        run: emcc -v
+
+      - name: Setup Python env
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          check-latest: true
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Checkout extism/cli
+        uses: actions/checkout@v3
+        with:
+          repository: extism/cli
+          path: cli
+
+      - name: Install Extism & CLI
+        run: |
+          pushd cli
+          pip3 install cffi
+          pip3 install .
+          popd
+
+          extism install latest
+
+      - name: Compile example
+        run: |
+          make example
+
+      - name: Test example
+        run: |
+          # --wasi is needed since stdio's snprintf() is called in the example/count_vowels.c source
+          TEST=$(extism call example.wasm --input "this is a test" --wasi count_vowels) 
+          echo $TEST | grep '"count": 4'
