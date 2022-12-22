@@ -44,12 +44,8 @@ jobs:
 
           extism install git
 
-      - name: Compile example
+      - name: Example
         run: |
-          make example
-
-      - name: Test example
-        run: |
-          # --wasi is needed since stdio's snprintf() is called in the example/count_vowels.c source
-          TEST=$(extism call example.wasm --input "this is a test" --wasi count_vowels) 
+          cd examples/count-vowels
+          TEST=$(make example)
           echo $TEST | grep '"count": 4'
