@@ -47,5 +47,5 @@ jobs:
       - name: Example
         run: |
           cd examples/count-vowels
-          TEST=$(make example)
+          TEST=$(make run)
           echo $TEST | grep '"count": 4'
