@@ -8,5 +8,3 @@ int32_t infinite_loop() {
   }
   return 0;
 }
-
-int main(void) { return 0; }

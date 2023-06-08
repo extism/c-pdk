@@ -49,7 +49,7 @@ jobs:
       - name: Install WASI SDK
         run: |
           bash install-wasi-sdk.sh
-          echo '$WASICC="'$(pwd)'"/wasi-sdk/bin/clang' >> $GITHUB_ENV
+          echo '$WASI_SDK_PATH="'$(pwd)'"/wasi-sdk' >> $GITHUB_ENV
 
       - name: Example
         run: |

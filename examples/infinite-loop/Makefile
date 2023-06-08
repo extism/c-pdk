@@ -1,7 +1,8 @@
-WASICC?=wasicc
+WASI_SDK_PATH?=../../wasi-sdk
 
-build:
-	$(WASICC) -o infinite-loop.wasm infinite-loop.c -Wl,--export=infinite_loop
+.PHONY: infinite-loop
+infinite-loop:
+	$(WASI_SDK_PATH)/bin/clang -O2 -g -o infinite-loop.wasm infinite-loop.c -nostartfiles -Wl,--no-entry -Wl,--export=infinite_loop
 
 run:
 	extism call --manifest ./manifest.json infinite_loop --wasi
