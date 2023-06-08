@@ -11,15 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install emcc compiler
-        uses: mymindstorm/setup-emsdk@v11
-        with:
-          version: latest
-          actions-cache-folder: emsdk-cache-${{ matrix.os }}
-
-      - name: Verify emcc install
-        run: emcc -v
-
       - name: Setup Python env
         uses: actions/setup-python@v4
         with:
@@ -43,6 +34,11 @@ jobs:
           popd
 
           extism install git
+
+      - name: Install WASI SDK
+        run: |
+          bash install-wasi-sdk.sh
+          echo '$WASICC="'$(pwd)'"/wasi-sdk/bin/clang' >> $GITHUB_ENV
 
       - name: Example
         run: |
