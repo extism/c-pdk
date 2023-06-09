@@ -7,7 +7,7 @@ int32_t count_vowels() {
   uint8_t ch = 0;
   uint64_t length = extism_input_length();
 
-  for (int64_t i = 0; i < length; i++) {
+  for (uint64_t i = 0; i < length; i++) {
     ch = extism_input_load_u8(i);
     count += (ch == 'A') + (ch == 'a') + (ch == 'E') + (ch == 'e') +
              (ch == 'I') + (ch == 'i') + (ch == 'O') + (ch == 'o') +

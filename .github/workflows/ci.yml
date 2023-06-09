@@ -1,5 +1,10 @@
 name: CI
-on: [pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   test-example:
@@ -11,14 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install emcc compiler
-        uses: mymindstorm/setup-emsdk@v11
+      - uses: actions-rs/toolchain@v1
         with:
-          version: latest
-          actions-cache-folder: emsdk-cache-${{ matrix.os }}
+          toolchain: stable
 
-      - name: Verify emcc install
-        run: emcc -v
+      - uses: Swatinem/rust-cache@v2
 
       - name: Setup Python env
         uses: actions/setup-python@v4
@@ -43,6 +45,11 @@ jobs:
           popd
 
           extism install git
+
+      - name: Install WASI SDK
+        run: |
+          bash install-wasi-sdk.sh
+          echo '$WASI_SDK_PATH="'$(pwd)'"/wasi-sdk' >> $GITHUB_ENV
 
       - name: Example
         run: |
