@@ -59,6 +59,7 @@ extern void extism_log_warn(ExtismPointer);
 IMPORT("env", "extism_log_error")
 extern void extism_log_error(ExtismPointer);
 
+// Load data from Extism memory
 static void extism_load(ExtismPointer offs, uint8_t *buffer, uint64_t length) {
   uint64_t n;
   uint64_t left = 0;
@@ -76,6 +77,7 @@ static void extism_load(ExtismPointer offs, uint8_t *buffer, uint64_t length) {
   }
 }
 
+// Load data from input buffer
 static void extism_load_input(uint8_t *buffer, uint64_t length) {
   uint64_t n;
   uint64_t left = 0;
@@ -93,6 +95,7 @@ static void extism_load_input(uint8_t *buffer, uint64_t length) {
   }
 }
 
+// Copy data into Extism memory
 static void extism_store(ExtismPointer offs, const uint8_t *buffer,
                          uint64_t length) {
   uint64_t n;
@@ -108,4 +111,32 @@ static void extism_store(ExtismPointer offs, const uint8_t *buffer,
     extism_store_u64(offs + i, n);
     i += 7;
   }
+}
+
+typedef enum {
+  ExtismLogInfo,
+  ExtismLogDebug,
+  ExtismLogWarn,
+  ExtismLogError,
+} ExtismLog;
+
+// Write to Extism log
+static void extism_log(const char *s, size_t len, ExtismLog level) {
+  ExtismPointer ptr = extism_alloc(len);
+  extism_store(ptr, (const uint8_t *)s, len);
+  switch (level) {
+  case ExtismLogInfo:
+    extism_log_info(ptr);
+    break;
+  case ExtismLogDebug:
+    extism_log_debug(ptr);
+    break;
+  case ExtismLogWarn:
+    extism_log_warn(ptr);
+    break;
+  case ExtismLogError:
+    extism_log_error(ptr);
+    break;
+  }
+  extism_free(ptr);
 }
