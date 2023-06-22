@@ -121,7 +121,7 @@ typedef enum {
 } ExtismLog;
 
 // Write to Extism log
-static void extism_log(const char *s, size_t len, ExtismLog level) {
+static void extism_log(const char *s, uint64_t len, ExtismLog level) {
   ExtismPointer ptr = extism_alloc(len);
   extism_store(ptr, (const uint8_t *)s, len);
   switch (level) {
