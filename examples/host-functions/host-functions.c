@@ -29,5 +29,3 @@ int32_t count_vowels() {
   extism_output_set(offs_, extism_length(offs_));
   return 0;
 }
-
-int main() {}
