@@ -1,6 +1,7 @@
 #include "../../extism-pdk.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int32_t count_vowels() {
   uint64_t count = 0;
@@ -21,5 +22,10 @@ int32_t count_vowels() {
   extism_store(offs_, (const uint8_t *)out, n);
   extism_output_set(offs_, n);
 
-  return 0;
+  const char *err = "this\nhas some\nnewlines";
+  uint64_t aa = extism_alloc(strlen(err));
+  extism_store(aa, (void *)err, strlen(err));
+  extism_error_set(aa);
+
+  return -1;
 }

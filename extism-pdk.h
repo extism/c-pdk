@@ -6,57 +6,60 @@
 
 typedef uint64_t ExtismPointer;
 
-IMPORT("env", "extism_input_length") extern uint64_t extism_input_length();
-IMPORT("env", "extism_length") extern uint64_t extism_length(ExtismPointer);
-IMPORT("env", "extism_alloc") extern ExtismPointer extism_alloc(uint64_t);
-IMPORT("env", "extism_free") extern void extism_free(ExtismPointer);
+IMPORT("extism:env", "input_length")
+extern uint64_t extism_input_length();
+IMPORT("extism:env", "length")
+extern uint64_t extism_length(ExtismPointer);
+IMPORT("extism:env", "alloc")
+extern ExtismPointer extism_alloc(uint64_t);
+IMPORT("extism:env", "free") extern void extism_free(ExtismPointer);
 
-IMPORT("env", "extism_input_load_u8")
+IMPORT("extism:env", "input_load_u8")
 extern uint8_t extism_input_load_u8(ExtismPointer);
 
-IMPORT("env", "extism_input_load_u64")
+IMPORT("extism:env", "input_load_u64")
 extern uint64_t extism_input_load_u64(ExtismPointer);
 
-IMPORT("env", "extism_output_set")
+IMPORT("extism:env", "output_set")
 extern void extism_output_set(ExtismPointer, uint64_t);
 
-IMPORT("env", "extism_error_set")
+IMPORT("extism:env", "error_set")
 extern void extism_error_set(ExtismPointer);
 
-IMPORT("env", "extism_config_get")
+IMPORT("extism:env", "config_get")
 extern ExtismPointer extism_config_get(ExtismPointer);
 
-IMPORT("env", "extism_var_get")
+IMPORT("extism:env", "var_get")
 extern ExtismPointer extism_var_get(ExtismPointer);
 
-IMPORT("env", "extism_var_set")
+IMPORT("extism:env", "var_set")
 extern void extism_var_set(ExtismPointer, ExtismPointer);
 
-IMPORT("env", "extism_store_u8")
+IMPORT("extism:env", "store_u8")
 extern void extism_store_u8(ExtismPointer, uint8_t);
 
-IMPORT("env", "extism_load_u8")
+IMPORT("extism:env", "load_u8")
 extern uint8_t extism_load_u8(ExtismPointer);
 
-IMPORT("env", "extism_store_u64")
+IMPORT("extism:env", "store_u64")
 extern void extism_store_u64(ExtismPointer, uint64_t);
 
-IMPORT("env", "extism_load_u64")
+IMPORT("extism:env", "load_u64")
 extern uint64_t extism_load_u64(ExtismPointer);
 
-IMPORT("env", "extism_http_request")
+IMPORT("extism:env", "http_request")
 extern ExtismPointer extism_http_request(ExtismPointer, ExtismPointer);
 
-IMPORT("env", "extism_http_status_code")
+IMPORT("extism:env", "http_status_code")
 extern int32_t extism_http_status_code();
 
-IMPORT("env", "extism_log_info")
+IMPORT("extism:env", "log_info")
 extern void extism_log_info(ExtismPointer);
-IMPORT("env", "extism_log_debug")
+IMPORT("extism:env", "log_debug")
 extern void extism_log_debug(ExtismPointer);
-IMPORT("env", "extism_log_warn")
+IMPORT("extism:env", "log_warn")
 extern void extism_log_warn(ExtismPointer);
-IMPORT("env", "extism_log_error")
+IMPORT("extism:env", "log_error")
 extern void extism_log_error(ExtismPointer);
 
 // Load data from Extism memory
