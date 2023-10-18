@@ -2,7 +2,7 @@
 
 This project contains a tool that can be used to create [Extism Plug-ins](https://extism.org/docs/concepts/plug-in) in C.
 
-## Installtion
+## Installation
 
 Since the Extism host provides these functions, all that's required to build a plugin with the Extism C PDK is the [extism-pdk.h](https://github.com/extism/c-pdk/blob/main/extism-pdk.h) header file. This can be copied into
 your project, or you can add the repo as a Git submodule:
@@ -26,7 +26,7 @@ Let's write a simple program that exports a `greet` function which will take a n
 const char *greeting = "Hello, ";
 uint64_t greetingLen = 7;
 
-int greet() {
+int32_t greet() {
   uint64_t inputLen = extism_input_length();
 
   // Load input
@@ -85,7 +85,7 @@ bool is_benjamin(const char *name) {
   return strncasecmp(name, "benjamin", nameLen) == 0;
 }
 
-int greet() {
+int32_t greet() {
   uint64_t inputLen = extism_input_length();
 
   // Load input
@@ -137,7 +137,7 @@ plug-in. These can be useful to statically configure the plug-in with some data 
 const char *greeting = "Hello, ";
 uint64_t greetingLen = 7;
 
-int greet() {
+int32_t greet() {
   ExtismPointer key = extism_alloc_string("user", 4);
   ExtismPointer value = extism_config_get(key);
   extism_free(key);
@@ -211,7 +211,8 @@ int32_t count() {
   extism_free(key);
 
   return 0;
-}```
+}
+```
 
 ### Logging
 
