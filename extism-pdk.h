@@ -113,6 +113,13 @@ static void extism_store(ExtismPointer offs, const uint8_t *buffer,
   }
 }
 
+// Allocate a string and copy the provided value into Extism memory
+static ExtismPointer extism_alloc_string(const char *s, uint64_t length) {
+  ExtismPointer ptr = extism_alloc(length);
+  extism_store(ptr, (const uint8_t *)s, length);
+  return ptr;
+}
+
 typedef enum {
   ExtismLogInfo,
   ExtismLogDebug,
