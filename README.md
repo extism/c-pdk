@@ -112,10 +112,11 @@ int32_t greet() {
 }
 ```
 
-This time we will compile our example using wasi-sdk, since we used the `<string.h>` header file.
+This time we will compile our example using [wasi-sdk](https://github.com/WebAssembly/wasi-sdk), since we used the `<string.h>` header file. And because we are targeting 
+`wasm32-wasi`, we will need to add the `-mexec-model=reactor` flag to be able to export specific functions instead of a single `_start` function:
 
 ```bash
-${WASI_SDK_PATH}/bin/clang -o plugin.wasm plugin.c -Wl,--export=greet -mexec-model=reactor
+$WASI_SDK_PATH/bin/clang -o plugin.wasm plugin.c -Wl,--export=greet -mexec-model=reactor
 extism call plugin.wasm greet --input="Benjamin" --wasi
 # => Error: ERROR
 echo $? # print last status code
