@@ -4,8 +4,8 @@
 
 typedef uint64_t ExtismPointer;
 
-#define EXTISM_ENV_MODULE "extism:env"
-#define EXTISM_USER_MODULE "extism:user"
+#define EXTISM_ENV_MODULE "extism:host/env"
+#define EXTISM_USER_MODULE "extism:host/user"
 
 #define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
 #define IMPORT_ENV(b)                                                          \
