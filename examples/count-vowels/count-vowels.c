@@ -1,6 +1,7 @@
 #include "../../extism-pdk.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int32_t count_vowels() {
   uint64_t count = 0;

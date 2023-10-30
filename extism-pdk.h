@@ -2,61 +2,71 @@
 
 #include <stdint.h>
 
-#define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
-
 typedef uint64_t ExtismPointer;
 
-IMPORT("env", "extism_input_length") extern uint64_t extism_input_length();
-IMPORT("env", "extism_length") extern uint64_t extism_length(ExtismPointer);
-IMPORT("env", "extism_alloc") extern ExtismPointer extism_alloc(uint64_t);
-IMPORT("env", "extism_free") extern void extism_free(ExtismPointer);
+#define EXTISM_ENV_MODULE "extism:host/env"
+#define EXTISM_USER_MODULE "extism:host/user"
 
-IMPORT("env", "extism_input_load_u8")
+#define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
+#define IMPORT_ENV(b)                                                          \
+  __attribute__((import_module(EXTISM_ENV_MODULE), import_name(b)))
+#define IMPORT_USER(b)                                                         \
+  __attribute__((import_module(EXTISM_USER_MODULE), import_name(b)))
+
+IMPORT_ENV("input_length")
+extern uint64_t extism_input_length();
+IMPORT_ENV("length")
+extern uint64_t extism_length(ExtismPointer);
+IMPORT_ENV("alloc")
+extern ExtismPointer extism_alloc(uint64_t);
+IMPORT_ENV("free") extern void extism_free(ExtismPointer);
+
+IMPORT_ENV("input_load_u8")
 extern uint8_t extism_input_load_u8(ExtismPointer);
 
-IMPORT("env", "extism_input_load_u64")
+IMPORT_ENV("input_load_u64")
 extern uint64_t extism_input_load_u64(ExtismPointer);
 
-IMPORT("env", "extism_output_set")
+IMPORT_ENV("output_set")
 extern void extism_output_set(ExtismPointer, uint64_t);
 
-IMPORT("env", "extism_error_set")
+IMPORT_ENV("error_set")
 extern void extism_error_set(ExtismPointer);
 
-IMPORT("env", "extism_config_get")
+IMPORT_ENV("config_get")
 extern ExtismPointer extism_config_get(ExtismPointer);
 
-IMPORT("env", "extism_var_get")
+IMPORT_ENV("var_get")
 extern ExtismPointer extism_var_get(ExtismPointer);
 
-IMPORT("env", "extism_var_set")
+IMPORT_ENV("var_set")
 extern void extism_var_set(ExtismPointer, ExtismPointer);
 
-IMPORT("env", "extism_store_u8")
+IMPORT_ENV("store_u8")
 extern void extism_store_u8(ExtismPointer, uint8_t);
 
-IMPORT("env", "extism_load_u8")
+IMPORT_ENV("load_u8")
 extern uint8_t extism_load_u8(ExtismPointer);
 
-IMPORT("env", "extism_store_u64")
+IMPORT_ENV("store_u64")
 extern void extism_store_u64(ExtismPointer, uint64_t);
 
-IMPORT("env", "extism_load_u64")
+IMPORT_ENV("load_u64")
 extern uint64_t extism_load_u64(ExtismPointer);
 
-IMPORT("env", "extism_http_request")
+IMPORT_ENV("http_request")
 extern ExtismPointer extism_http_request(ExtismPointer, ExtismPointer);
 
-IMPORT("env", "extism_http_status_code")
+IMPORT_ENV("http_status_code")
 extern int32_t extism_http_status_code();
 
-IMPORT("env", "extism_log_info")
+IMPORT_ENV("log_info")
 extern void extism_log_info(ExtismPointer);
-IMPORT("env", "extism_log_debug")
+IMPORT_ENV("log_debug")
 extern void extism_log_debug(ExtismPointer);
-IMPORT("env", "extism_log_warn")
+IMPORT_ENV("log_warn")
 extern void extism_log_warn(ExtismPointer);
-IMPORT("env", "extism_log_error")
+IMPORT_ENV("log_error")
 extern void extism_log_error(ExtismPointer);
 
 // Load data from Extism memory

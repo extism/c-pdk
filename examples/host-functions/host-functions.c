@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+IMPORT("extism:host/user", "hello_world")
 extern uint64_t hello_world(uint64_t);
 
 int32_t count_vowels() {
