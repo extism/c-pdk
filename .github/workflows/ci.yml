@@ -27,3 +27,10 @@ jobs:
           cd examples/count-vowels
           TEST=$(make run)
           echo $TEST | grep '"count": 4'
+
+          
+      - name: Tests
+        if: matrix.os != 'macos-latest'
+        run: |
+          cd tests
+          make test
