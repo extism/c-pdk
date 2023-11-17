@@ -79,8 +79,8 @@ static void extism_load(ExtismPointer offs, uint8_t *buffer, uint64_t length) {
 
   uint64_t remainder = length & 7;
   uint64_t remainder_offset = chunk_count << 3;
-  for (uint64_t index = remainder_offset; index < remainder + remainder_offset;
-       index++) {
+  for (uint64_t index = remainder_offset;
+       index < (remainder + remainder_offset); index++) {
     buffer[index] = extism_load_u8(offs + index);
   }
 }
@@ -95,8 +95,8 @@ static void extism_load_input(uint8_t *buffer, uint64_t length) {
 
   uint64_t remainder = length & 7;
   uint64_t remainder_offset = chunk_count << 3;
-  for (uint64_t index = remainder_offset; index < remainder + remainder_offset;
-       index++) {
+  for (uint64_t index = remainder_offset;
+       index < (remainder + remainder_offset); index++) {
     buffer[index] = extism_input_load_u8(index);
   }
 }
