@@ -71,55 +71,50 @@ extern void extism_log_error(ExtismPointer);
 
 // Load data from Extism memory
 static void extism_load(ExtismPointer offs, uint8_t *buffer, uint64_t length) {
-  uint64_t n;
-  uint64_t left = 0;
+  uint64_t chunk_count = length >> 3;
+  uint64_t *i64_buffer = (uint64_t *)buffer;
+  for (uint64_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
+    i64_buffer[chunk_idx] = extism_load_u64(offs + (chunk_idx << 3));
+  }
 
-  for (uint64_t i = 0; i < length; i += 1) {
-    left = length - i;
-    if (left < 8) {
-      buffer[i] = extism_load_u8(offs + i);
-      continue;
-    }
-
-    n = extism_load_u64(offs + i);
-    *((uint64_t *)buffer + (i / 8)) = n;
-    i += 7;
+  uint64_t remainder = length & 7;
+  uint64_t remainder_offset = chunk_count << 3;
+  for (uint64_t index = remainder_offset; index < remainder + remainder_offset;
+       index++) {
+    buffer[index] = extism_load_u8(offs + index);
   }
 }
 
 // Load data from input buffer
 static void extism_load_input(uint8_t *buffer, uint64_t length) {
-  uint64_t n;
-  uint64_t left = 0;
+  uint64_t chunk_count = length >> 3;
+  uint64_t *i64_buffer = (uint64_t *)buffer;
+  for (uint64_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
+    i64_buffer[chunk_idx] = extism_input_load_u64(chunk_idx << 3);
+  }
 
-  for (uint64_t i = 0; i < length; i += 1) {
-    left = length - i;
-    if (left < 8) {
-      buffer[i] = extism_input_load_u8(i);
-      continue;
-    }
-
-    n = extism_input_load_u64(i);
-    *((uint64_t *)buffer + (i / 8)) = n;
-    i += 7;
+  uint64_t remainder = length & 7;
+  uint64_t remainder_offset = chunk_count << 3;
+  for (uint64_t index = remainder_offset; index < remainder + remainder_offset;
+       index++) {
+    buffer[index] = extism_input_load_u8(index);
   }
 }
 
 // Copy data into Extism memory
 static void extism_store(ExtismPointer offs, const uint8_t *buffer,
                          uint64_t length) {
-  uint64_t n;
-  uint64_t left = 0;
-  for (uint64_t i = 0; i < length; i++) {
-    left = length - i;
-    if (left < 8) {
-      extism_store_u8(offs + i, buffer[i]);
-      continue;
-    }
+  uint64_t chunk_count = length >> 3;
+  uint64_t *i64_buffer = (uint64_t *)buffer;
+  for (uint64_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
+    extism_store_u64(offs + (chunk_idx << 3), i64_buffer[chunk_idx]);
+  }
 
-    n = *((uint64_t *)buffer + (i / 8));
-    extism_store_u64(offs + i, n);
-    i += 7;
+  uint64_t remainder = length & 7;
+  uint64_t remainder_offset = chunk_count << 3;
+  for (uint64_t index = remainder_offset;
+       index < (remainder + remainder_offset); index++) {
+    extism_store_u8(offs + index, buffer[index]);
   }
 }
 
