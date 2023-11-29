@@ -7,6 +7,11 @@ typedef uint64_t ExtismPointer;
 #define EXTISM_ENV_MODULE "extism:host/env"
 #define EXTISM_USER_MODULE "extism:host/user"
 
+#define EXTISM_EXPORT_AS(name) __attribute__((export_name(name)))
+#define EXTISM_EXPORTED_FUNCTION(name)                                         \
+  EXTISM_EXPORT_AS(#name)                                                      \
+  name(void)
+
 #define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
 #define IMPORT_ENV(b)                                                          \
   __attribute__((import_module(EXTISM_ENV_MODULE), import_name(b)))
@@ -19,7 +24,8 @@ IMPORT_ENV("length")
 extern uint64_t extism_length(ExtismPointer);
 IMPORT_ENV("alloc")
 extern ExtismPointer extism_alloc(uint64_t);
-IMPORT_ENV("free") extern void extism_free(ExtismPointer);
+IMPORT_ENV("free")
+extern void extism_free(ExtismPointer);
 
 IMPORT_ENV("input_load_u8")
 extern uint8_t extism_input_load_u8(ExtismPointer);
