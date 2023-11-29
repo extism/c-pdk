@@ -10,7 +10,7 @@ typedef uint64_t ExtismPointer;
 #define EXTISM_EXPORT_AS(name) __attribute__((export_name(name)))
 #define EXTISM_EXPORTED_FUNCTION(name)                                         \
   EXTISM_EXPORT_AS(#name)                                                      \
-  name
+  name(void)
 
 #define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
 #define IMPORT_ENV(b)                                                          \
