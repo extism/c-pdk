@@ -22,21 +22,26 @@ Let's write a simple program that exports a `greet` function which will take a n
 
 ```c
 #include "extism-pdk.h"
+#include <stdint.h>
 
-const char *greeting = "Hello, ";
-uint64_t greetingLen = 7;
+#define Greet_Max_Input 1024
+static const char Greeting[] = "Hello, ";
 
-int32_t greet() {
+int32_t EXTISM_EXPORTED_FUNCTION(greet) {
   uint64_t inputLen = extism_input_length();
+  if (inputLen > Greet_Max_Input) {
+    inputLen = Greet_Max_Input;
+  }
 
   // Load input
-  uint8_t inputData[inputLen];
+  static uint8_t inputData[Greet_Max_Input];
   extism_load_input(inputData, inputLen);
 
   // Allocate a new offset used to store greeting and name
-  uint64_t outputLen = greetingLen + inputLen;
+  const uint64_t greetingLen = sizeof(Greeting) - 1;
+  const uint64_t outputLen = greetingLen + inputLen;
   ExtismPointer offs = extism_alloc(outputLen);
-  extism_store(offs, (const uint8_t *)greeting, greetingLen);
+  extism_store(offs, (const uint8_t *)Greeting, greetingLen);
   extism_store(offs + greetingLen, inputData, inputLen);
 
   // Set output
@@ -45,20 +50,21 @@ int32_t greet() {
 }
 ```
 
+The `EXTISM_EXPORTED_FUNCTION` macro simplifies declaring an Extism function that will be exported to the host.
+
 Since we don't need any system access for this, we can compile this directly with clang:
 
 ```shell
-clang -o plugin.wasm --target=wasm32-unknown-unknown -nostdlib -Wl,--no-entry -Wl,--export=greet plugin.c
+clang -o plugin.wasm --target=wasm32-unknown-unknown -nostdlib -Wl,--no-entry plugin.c
 ```
 
-To break this down a little:
+The above command may fail if ran with system clang. It's highly recommended to use use clang from the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) instead. The `wasi-sdk` also includes a libc implementation targeting WASI, necessary for plugins that need the C standard library.
+
+Let's break down the command a little:
 
 - `--target=wasm32-unknown-unknown` configures the correct Webassembly target
 - `-nostdlib` tells the compiler not to link the standard library
 - `-Wl,--no-entry` is a linker flag to tell the linker there is no `_start` function
-- `-Wl,--export=greet` is a linker flag used to export the `greet` function
-
-There is also [wasi-sdk](https://github.com/WebAssembly/wasi-sdk), a libc implementation targeting WASI, for plugins that need access to the C standard library.
 
 We can now test `plugin.wasm` using the [Extism CLI](https://github.com/extism/cli)'s `call`
 command:
@@ -75,22 +81,27 @@ We catch any exceptions thrown and return them as errors to the host. Suppose we
 ```c
 #include "extism-pdk.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
-const char *greeting = "Hello, ";
-uint64_t greetingLen = 7;
+#define Greet_Max_Input 1024
+static const char Greeting[] = "Hello, ";
 
-bool is_benjamin(const char *name) {
-  size_t nameLen = strlen(name);
-  return strncasecmp(name, "benjamin", nameLen) == 0;
+static bool is_benjamin(const char *name) {
+  return strcasecmp(name, "benjamin") == 0;
 }
 
-int32_t greet() {
+int32_t EXTISM_EXPORTED_FUNCTION(greet) {
   uint64_t inputLen = extism_input_length();
+  const uint64_t greetMaxString = Greet_Max_Input - 1;
+  if (inputLen > greetMaxString) {
+    inputLen = greetMaxString;
+  }
 
   // Load input
-  uint8_t inputData[inputLen];
+  static uint8_t inputData[Greet_Max_Input];
   extism_load_input(inputData, inputLen);
+  inputData[inputLen] = '\0';
 
   // Check if the input matches "benjamin", if it does
   // return an error
@@ -101,9 +112,10 @@ int32_t greet() {
   }
 
   // Allocate a new offset used to store greeting and name
-  uint64_t outputLen = greetingLen + inputLen;
+  const uint64_t greetingLen = sizeof(Greeting) - 1;
+  const uint64_t outputLen = greetingLen + inputLen;
   ExtismPointer offs = extism_alloc(outputLen);
-  extism_store(offs, (const uint8_t *)greeting, greetingLen);
+  extism_store(offs, (const uint8_t *)Greeting, greetingLen);
   extism_store(offs + greetingLen, inputData, inputLen);
 
   // Set output
@@ -116,7 +128,7 @@ This time we will compile our example using [wasi-sdk](https://github.com/WebAss
 `wasm32-wasi`, we will need to add the `-mexec-model=reactor` flag to be able to export specific functions instead of a single `_start` function:
 
 ```bash
-$WASI_SDK_PATH/bin/clang -o plugin.wasm plugin.c -Wl,--export=greet -mexec-model=reactor
+$WASI_SDK_PATH/bin/clang -o plugin.wasm plugin.c -mexec-model=reactor
 extism call plugin.wasm greet --input="Benjamin" --wasi
 # => Error: ERROR
 echo $? # print last status code
@@ -134,11 +146,13 @@ plug-in. These can be useful to statically configure the plug-in with some data 
 
 ```c
 #include "extism-pdk.h"
+#include <stdint.h>
+#include <stdlib.h>
 
-const char *greeting = "Hello, ";
-uint64_t greetingLen = 7;
+#define Greet_Max_Input 1024
+static const char Greeting[] = "Hello, ";
 
-int32_t greet() {
+int32_t EXTISM_EXPORTED_FUNCTION(greet) {
   ExtismPointer key = extism_alloc_string("user", 4);
   ExtismPointer value = extism_config_get(key);
   extism_free(key);
@@ -149,17 +163,19 @@ int32_t greet() {
     return -1;
   }
 
-  uint64_t valueLen = extism_length(value);
+  const uint64_t valueLen = extism_length(value);
 
   // Load config value
-  uint8_t valueData[valueLen];
+  uint8_t *valueData = malloc(valueLen);
   extism_load(value, valueData, valueLen);
 
   // Allocate a new offset used to store greeting and name
-  uint64_t outputLen = greetingLen + valueLen;
+  const uint64_t greetingLen = sizeof(Greeting) - 1;
+  const uint64_t outputLen = greetingLen + valueLen;
   ExtismPointer offs = extism_alloc(outputLen);
-  extism_store(offs, (const uint8_t *)greeting, greetingLen);
+  extism_store(offs, (const uint8_t *)Greeting, greetingLen);
   extism_store(offs + greetingLen, valueData, valueLen);
+  free(valueData);
 
   // Set output
   extism_output_set(offs, outputLen);
@@ -184,8 +200,9 @@ You can use `extism_var_get`, and `extism_var_set` to manipulate vars:
 
 ```c
 #include "extism-pdk.h"
+#include <stdint.h>
 
-int32_t count() {
+int32_t EXTISM_EXPORTED_FUNCTION(count) {
   ExtismPointer key = extism_alloc_string("count", 5);
   ExtismPointer value = extism_var_get(key);
 
@@ -221,8 +238,9 @@ The `extism_log*` functions can be used to emit logs:
 
 ```c
 #include "extism-pdk.h"
+#include <stdint.h>
 
-uint32_t log_stuff() {
+int32_t EXTISM_EXPORTED_FUNCTION(log_stuff) {
   ExtismPointer msg = extism_alloc_string("Hello!", 6);
   extism_log_info(msg);
   extism_log_debug(msg);
@@ -251,9 +269,10 @@ HTTP calls can be made using `extism_http_request`:
 
 ```c
 #include "extism-pdk.h"
+#include <stdint.h>
 #include <string.h>
 
-uint32_t call_http() {
+int32_t EXTISM_EXPORTED_FUNCTION(call_http) {
   const char *reqStr = "{\
     \"method\": \"GET\",\
     \"url\": \"https://jsonplaceholder.typicode.com/todos/1\"\
@@ -271,7 +290,7 @@ uint32_t call_http() {
 }
 ```
 
-To test it you will need to pass `--allowed-host jsonplaceholder.typicode.com` to the `extism` CLI, otherwise the HTTP request will
+To test it you will need to pass `--allow-host jsonplaceholder.typicode.com` to the `extism` CLI, otherwise the HTTP request will
 be rejected.
 
 ## Imports (Host Functions)
@@ -304,8 +323,9 @@ To call this function, we pass an Extism pointer and receive one back:
 
 ```c
 #include "extism-pdk.h"
+#include <stdint.h>
 
-int32_t hello_from_python(){
+int32_t EXTISM_EXPORTED_FUNCTION(hello_from_python) {
   ExtismPointer arg = extism_alloc_string("Hello!", 6);
   ExtismPointer res = a_python_func(arg);
   extism_free(arg);
@@ -363,6 +383,34 @@ python3 app.py
 # => An argument to send to Python!
 ```
 
-### Reach Out!
+## Exports (details)
+
+The `EXTISM_EXPORTED_FUNCTION` macro is not essential to create a plugin function and export it to the host. You may instead write a function and then export it when linking. For example, the first example may have the following signature instead:
+
+```c
+int32_t greet(void)
+```
+
+Then, it can be built and linked with:
+
+```bash
+$WASI_SDK_PATH/bin/clang -o plugin.wasm --target=wasm32-unknown-unknown -nostdlib -Wl,--no-entry -Wl,--export=greet plugin.c
+```
+
+Note the `-Wl,--export=greet`
+
+Exports names do not necessarily have to match the function name either. Going back to the first example again. Try:
+
+```c
+EXTISM_EXPORT_AS("greet") int32_t internal_name_for_greet(void)
+```
+
+and build with:
+
+```bash
+$WASI_SDK_PATH/bin/clang -o plugin.wasm --target=wasm32-unknown-unknown -nostdlib -Wl,--no-entry plugin.c
+```
+
+## Reach Out!
 
 Have a question or just want to drop in and say hi? [Hop on the Discord](https://extism.org/discord)!
