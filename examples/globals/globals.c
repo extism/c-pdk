@@ -4,7 +4,7 @@
 
 uint64_t count = 0;
 
-int32_t globals() {
+int32_t EXTISM_EXPORTED_FUNCTION(globals) {
   char out[128];
   int n = snprintf(out, 128, "{\"count\": %llu}", count);
 

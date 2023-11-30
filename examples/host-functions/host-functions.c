@@ -5,7 +5,7 @@
 IMPORT("extism:host/user", "hello_world")
 extern uint64_t hello_world(uint64_t);
 
-int32_t count_vowels() {
+int32_t EXTISM_EXPORTED_FUNCTION(count_vowels) {
   uint64_t length = extism_input_length();
 
   if (length == 0) {
