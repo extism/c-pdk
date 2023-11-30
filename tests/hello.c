@@ -1,6 +1,6 @@
 #include "util.h"
 
-int32_t run_test() {
+EXTISM_EXPORT_AS("run_test") int32_t run_test(void) {
   const char *msg = "Hello, world!";
   ExtismPointer ptr = extism_alloc(strlen(msg));
   assert(ptr > 0);

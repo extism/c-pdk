@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int32_t count_vowels() {
+int32_t EXTISM_EXPORTED_FUNCTION(count_vowels) {
   uint64_t count = 0;
   uint8_t ch = 0;
   uint64_t length = extism_input_length();
