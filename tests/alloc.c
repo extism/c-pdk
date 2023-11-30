@@ -4,7 +4,7 @@
 #define NPAGES1 5
 #define PAGE1 65539
 
-int32_t run_test() {
+int32_t EXTISM_EXPORTED_FUNCTION(run_test) {
   ExtismPointer buf[NPAGES0][NPAGES1];
   for (int i = 0; i < NPAGES0; i++) {
     for (int j = 0; j < NPAGES1; j++) {
