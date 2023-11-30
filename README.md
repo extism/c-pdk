@@ -167,6 +167,11 @@ int32_t EXTISM_EXPORTED_FUNCTION(greet) {
 
   // Load config value
   uint8_t *valueData = malloc(valueLen);
+  if (valueData == NULL) {
+    ExtismPointer err = extism_alloc_string("OOM", 11);
+    extism_error_set(err);
+    return -1;
+  }
   extism_load(value, valueData, valueLen);
 
   // Allocate a new offset used to store greeting and name
