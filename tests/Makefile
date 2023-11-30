@@ -1,4 +1,4 @@
-WASI_SDK_PATH?=../../wasi-sdk
+WASI_SDK_PATH?=../wasi-sdk
 
 test: test-alloc test-hello
 run-fail: test-fail
