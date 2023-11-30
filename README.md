@@ -58,7 +58,7 @@ Since we don't need any system access for this, we can compile this directly wit
 clang -o plugin.wasm --target=wasm32-unknown-unknown -nostdlib -Wl,--no-entry plugin.c
 ```
 
-The above command may fail if ran with system clang. It's highly recommended to use use clang from the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) instead. The `wasi-sdk` also includes a libc implementation targeting WASI, necessary for plugins that need the C standard library.
+The above command may fail if ran with system clang. It's highly recommended to use clang from the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) instead. The `wasi-sdk` also includes a libc implementation targeting WASI, necessary for plugins that need the C standard library.
 
 Let's break down the command a little:
 
