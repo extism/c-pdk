@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef uint64_t ExtismPointer;
@@ -12,123 +13,218 @@ typedef uint64_t ExtismPointer;
   EXTISM_EXPORT_AS(#name)                                                      \
   name(void)
 
-#define IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
-#define IMPORT_ENV(b)                                                          \
+#define EXTISM_IMPORT(a, b) __attribute__((import_module(a), import_name(b)))
+#define EXTISM_IMPORT_ENV(b)                                                   \
   __attribute__((import_module(EXTISM_ENV_MODULE), import_name(b)))
-#define IMPORT_USER(b)                                                         \
+#define EXTISM_IMPORT_USER(b)                                                  \
   __attribute__((import_module(EXTISM_USER_MODULE), import_name(b)))
 
-IMPORT_ENV("input_length")
-extern uint64_t extism_input_length();
-IMPORT_ENV("length")
-extern uint64_t extism_length(ExtismPointer);
-IMPORT_ENV("alloc")
-extern ExtismPointer extism_alloc(uint64_t);
-IMPORT_ENV("free")
+EXTISM_IMPORT_ENV("input_length")
+extern uint64_t extism_input_length(void);
+EXTISM_IMPORT_ENV("length")
+extern uint64_t extism_length(const ExtismPointer);
+EXTISM_IMPORT_ENV("alloc")
+extern ExtismPointer extism_alloc(const uint64_t);
+EXTISM_IMPORT_ENV("free")
 extern void extism_free(ExtismPointer);
+EXTISM_IMPORT_ENV("input_load_u8")
+extern uint8_t extism_input_load_u8(const ExtismPointer);
 
-IMPORT_ENV("input_load_u8")
-extern uint8_t extism_input_load_u8(ExtismPointer);
+EXTISM_IMPORT_ENV("input_load_u64")
+extern uint64_t extism_input_load_u64(const ExtismPointer);
 
-IMPORT_ENV("input_load_u64")
-extern uint64_t extism_input_load_u64(ExtismPointer);
+EXTISM_IMPORT_ENV("output_set")
+extern void extism_output_set(const ExtismPointer, const uint64_t);
 
-IMPORT_ENV("output_set")
-extern void extism_output_set(ExtismPointer, uint64_t);
+EXTISM_IMPORT_ENV("error_set")
+extern void extism_error_set(const ExtismPointer);
 
-IMPORT_ENV("error_set")
-extern void extism_error_set(ExtismPointer);
+EXTISM_IMPORT_ENV("config_get")
+extern ExtismPointer extism_config_get(const ExtismPointer);
 
-IMPORT_ENV("config_get")
-extern ExtismPointer extism_config_get(ExtismPointer);
+EXTISM_IMPORT_ENV("var_get")
+extern ExtismPointer extism_var_get(const ExtismPointer);
 
-IMPORT_ENV("var_get")
-extern ExtismPointer extism_var_get(ExtismPointer);
+EXTISM_IMPORT_ENV("var_set")
+extern void extism_var_set(ExtismPointer, const ExtismPointer);
 
-IMPORT_ENV("var_set")
-extern void extism_var_set(ExtismPointer, ExtismPointer);
+EXTISM_IMPORT_ENV("store_u8")
+extern void extism_store_u8(ExtismPointer, const uint8_t);
 
-IMPORT_ENV("store_u8")
-extern void extism_store_u8(ExtismPointer, uint8_t);
+EXTISM_IMPORT_ENV("load_u8")
+extern uint8_t extism_load_u8(const ExtismPointer);
 
-IMPORT_ENV("load_u8")
-extern uint8_t extism_load_u8(ExtismPointer);
+EXTISM_IMPORT_ENV("store_u64")
+extern void extism_store_u64(ExtismPointer, const uint64_t);
 
-IMPORT_ENV("store_u64")
-extern void extism_store_u64(ExtismPointer, uint64_t);
+EXTISM_IMPORT_ENV("load_u64")
+extern uint64_t extism_load_u64(const ExtismPointer);
 
-IMPORT_ENV("load_u64")
-extern uint64_t extism_load_u64(ExtismPointer);
+EXTISM_IMPORT_ENV("http_request")
+extern ExtismPointer extism_http_request(const ExtismPointer,
+                                         const ExtismPointer);
 
-IMPORT_ENV("http_request")
-extern ExtismPointer extism_http_request(ExtismPointer, ExtismPointer);
+EXTISM_IMPORT_ENV("http_status_code")
+extern int32_t extism_http_status_code(void);
 
-IMPORT_ENV("http_status_code")
-extern int32_t extism_http_status_code();
-
-IMPORT_ENV("log_info")
-extern void extism_log_info(ExtismPointer);
-IMPORT_ENV("log_debug")
-extern void extism_log_debug(ExtismPointer);
-IMPORT_ENV("log_warn")
-extern void extism_log_warn(ExtismPointer);
-IMPORT_ENV("log_error")
-extern void extism_log_error(ExtismPointer);
+EXTISM_IMPORT_ENV("log_info")
+extern void extism_log_info(const ExtismPointer);
+EXTISM_IMPORT_ENV("log_debug")
+extern void extism_log_debug(const ExtismPointer);
+EXTISM_IMPORT_ENV("log_warn")
+extern void extism_log_warn(const ExtismPointer);
+EXTISM_IMPORT_ENV("log_error")
+extern void extism_log_error(const ExtismPointer);
 
 // Load data from Extism memory
-static void extism_load(ExtismPointer offs, uint8_t *buffer, uint64_t length) {
-  uint64_t chunk_count = length >> 3;
-  uint64_t *i64_buffer = (uint64_t *)buffer;
-  for (uint64_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
+// Does not verify load is in bounds
+static void extism_load(const ExtismPointer offs, void *dest, const size_t n) {
+  const size_t chunk_count = n >> 3;
+  uint64_t *i64_buffer = dest;
+  for (size_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
     i64_buffer[chunk_idx] = extism_load_u64(offs + (chunk_idx << 3));
   }
 
-  uint64_t remainder = length & 7;
-  uint64_t remainder_offset = chunk_count << 3;
-  for (uint64_t index = remainder_offset;
-       index < (remainder + remainder_offset); index++) {
-    buffer[index] = extism_load_u8(offs + index);
+  size_t remainder_offset = chunk_count << 3;
+  const size_t remainder_end = remainder_offset + (n & 7);
+  for (uint8_t *u8_buffer = dest; remainder_offset < remainder_end;
+       remainder_offset++) {
+    u8_buffer[remainder_offset] = extism_load_u8(offs + remainder_offset);
   }
 }
 
 // Load data from input buffer
-static void extism_load_input(uint8_t *buffer, uint64_t length) {
-  uint64_t chunk_count = length >> 3;
-  uint64_t *i64_buffer = (uint64_t *)buffer;
-  for (uint64_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
+// Does not verify load is inbounds
+static void extism_load_input_unsafe(void *dest, const size_t n) {
+  const size_t chunk_count = n >> 3;
+  uint64_t *i64_buffer = dest;
+  for (size_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
     i64_buffer[chunk_idx] = extism_input_load_u64(chunk_idx << 3);
   }
 
-  uint64_t remainder = length & 7;
-  uint64_t remainder_offset = chunk_count << 3;
-  for (uint64_t index = remainder_offset;
-       index < (remainder + remainder_offset); index++) {
-    buffer[index] = extism_input_load_u8(index);
+  size_t remainder_offset = chunk_count << 3;
+  const size_t remainder_end = remainder_offset + (n & 7);
+  for (uint8_t *u8_buffer = dest; remainder_offset < remainder_end;
+       remainder_offset++) {
+    u8_buffer[remainder_offset] = extism_input_load_u8(remainder_offset);
   }
+}
+
+// Load data from input buffer
+// Verifies load is inbounds
+static bool extism_load_input(void *dest, const size_t n) {
+  const uint64_t input_len = extism_input_length();
+  if (n > input_len) {
+    return false;
+  }
+  extism_load_input_unsafe(dest, n);
+  return true;
+}
+
+// Load n-1 bytes from input buffer and zero terminate
+// Does not verify load is inbounds
+static void extism_load_input_sz_unsafe(char *dest, const size_t n) {
+  extism_load_input_unsafe(dest, n - 1);
+  dest[n - 1] = '\0';
+}
+
+// Load n-1 bytes from input buffer and zero terminate
+// Verifies load is inbounds
+static bool extism_load_input_sz(char *dest, const size_t n) {
+  const uint64_t input_len = extism_input_length();
+  if ((n - 1) > input_len) {
+    return false;
+  }
+  extism_load_input_sz_unsafe(dest, n);
+  return true;
 }
 
 // Copy data into Extism memory
-static void extism_store(ExtismPointer offs, const uint8_t *buffer,
-                         uint64_t length) {
-  uint64_t chunk_count = length >> 3;
-  uint64_t *i64_buffer = (uint64_t *)buffer;
-  for (uint64_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
+static void extism_store(ExtismPointer offs, const void *buffer,
+                         const size_t length) {
+  const size_t chunk_count = length >> 3;
+  const uint64_t *i64_buffer = buffer;
+  for (size_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
     extism_store_u64(offs + (chunk_idx << 3), i64_buffer[chunk_idx]);
   }
 
-  uint64_t remainder = length & 7;
-  uint64_t remainder_offset = chunk_count << 3;
-  for (uint64_t index = remainder_offset;
-       index < (remainder + remainder_offset); index++) {
-    extism_store_u8(offs + index, buffer[index]);
+  size_t remainder_offset = chunk_count << 3;
+  const size_t remainder_end = remainder_offset + (length & 7);
+  for (const uint8_t *u8_buffer = buffer; remainder_offset < remainder_end;
+       remainder_offset++) {
+    extism_store_u8(offs + remainder_offset, u8_buffer[remainder_offset]);
   }
 }
 
-// Allocate a string and copy the provided value into Extism memory
-static ExtismPointer extism_alloc_string(const char *s, uint64_t length) {
-  ExtismPointer ptr = extism_alloc(length);
-  extism_store(ptr, (const uint8_t *)s, length);
+// Allocate a buffer in Extism memory and copy into it
+static ExtismPointer extism_alloc_buf(const void *src, const size_t n) {
+  ExtismPointer ptr = extism_alloc(n);
+  extism_store(ptr, src, n);
   return ptr;
+}
+
+__attribute__((
+    deprecated("Use extism_alloc_buf instead."))) static inline ExtismPointer
+extism_alloc_string(const char *s, const size_t n) {
+  return extism_alloc_buf(s, n);
+}
+
+#ifdef EXTISM_USE_LIBC
+#include <stdlib.h>
+#include <string.h>
+
+#define extism_strlen strlen
+
+// get the input length (n) and malloc(n), load n bytes from Extism memory into
+// it. If outSize is provided, set it to n
+static void *extism_load_input_dup(size_t *outSize) {
+  const uint64_t n = extism_input_length();
+  if (n > SIZE_MAX) {
+    return NULL;
+  }
+  void *buf = malloc(n);
+  if (!buf) {
+    return NULL;
+  }
+  extism_load_input_unsafe(buf, n);
+  if (outSize) {
+    *outSize = n;
+  }
+  return buf;
+}
+
+// get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes from
+// Extism memory into it. Zero terminate. If outSize is provided, set it to n
+static void *extism_load_input_sz_dup(size_t *outSize) {
+  uint64_t n = extism_input_length();
+  if (n > (SIZE_MAX - 1)) {
+    return NULL;
+  }
+  n++;
+  char *buf = malloc(n);
+  if (!buf) {
+    return NULL;
+  }
+  extism_load_input_sz_unsafe(buf, n);
+  if (outSize) {
+    *outSize = n;
+  }
+  return buf;
+}
+
+#else
+static size_t extism_strlen(const char *sz) {
+  size_t len;
+  for (len = 0; sz[len] != '\0'; len++) {
+  }
+  return len;
+}
+#endif
+
+// Allocate a buffer in Extism memory and copy string data into it
+// copied string is NOT null terminated
+static ExtismPointer extism_alloc_buf_from_sz(const char *sz) {
+  return extism_alloc_buf(sz, extism_strlen(sz));
 }
 
 typedef enum {
@@ -139,9 +235,9 @@ typedef enum {
 } ExtismLog;
 
 // Write to Extism log
-static void extism_log(const char *s, uint64_t len, ExtismLog level) {
+static void extism_log(const char *s, const size_t len, const ExtismLog level) {
   ExtismPointer ptr = extism_alloc(len);
-  extism_store(ptr, (const uint8_t *)s, len);
+  extism_store(ptr, s, len);
   switch (level) {
   case ExtismLogInfo:
     extism_log_info(ptr);
