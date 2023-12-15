@@ -92,6 +92,13 @@ static void extism_load(const ExtismPointer offs, void *buffer,
   }
 }
 
+// Load n-1 bytes from Extism memory and zero terminate
+static void extism_load_sz(char *dest, const ExtismPointer src,
+                           const size_t n) {
+  extism_load(src, dest, n - 1);
+  dest[n - 1] = '\0';
+}
+
 // Load data from input buffer
 static void extism_load_input(void *buffer, const size_t length) {
   const size_t chunk_count = length >> 3;
@@ -106,6 +113,12 @@ static void extism_load_input(void *buffer, const size_t length) {
        remainder_offset++) {
     u8_buffer[remainder_offset] = extism_input_load_u8(remainder_offset);
   }
+}
+
+// Load n-1 bytes from input buffer and zero terminate
+static void extism_load_input_sz(char *dest, const size_t n) {
+  extism_load_input(dest, n - 1);
+  dest[n - 1] = '\0';
 }
 
 // Copy data into Extism memory
@@ -136,6 +149,85 @@ __attribute__((
     deprecated("Use extism_alloc_buf instead."))) static inline ExtismPointer
 extism_alloc_string(const char *s, const size_t length) {
   return extism_alloc_buf(s, length);
+}
+
+#ifdef EXTISM_USE_LIBC
+#include <stdlib.h>
+#include <string.h>
+
+#define extism_strlen strlen
+
+// malloc n bytes and load n bytes from Extism memory into it
+static void *extism_load_dup(const ExtismPointer src, const size_t n) {
+  void *buf = malloc(n);
+  if (!buf) {
+    return NULL;
+  }
+  extism_load(src, buf, n);
+  return buf;
+}
+
+// malloc n bytes and load n-1 bytes from Extism memory into it and then zero
+// terminate it
+static const char *extism_load_sz_dup(const ExtismPointer src, const size_t n) {
+  const char *buf = malloc(n);
+  if (!buf) {
+    return NULL;
+  }
+  extism_load_sz(buf, src, n);
+  return buf;
+}
+
+// get the input length (n) and malloc(n), load n bytes from Extism memory into
+// it. If outSize is provided, set it to n
+static void *extism_load_input_dup(size_t *outSize) {
+  const uint64_t n = extism_input_length();
+  if (n > SIZE_MAX) {
+    return NULL;
+  }
+  const char *buf = malloc(n);
+  if (!buf) {
+    return NULL;
+  }
+  extism_load_input(buf, n);
+  if (outSize) {
+    *outSize = n;
+  }
+  return buf;
+}
+
+// get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes from
+// Extism memory into it. Zero terminate. If outSize is provided, set it to n
+static void *extism_load_input_sz_dup(size_t *outSize) {
+  uint64_t n = extism_input_length();
+  if (n > (SIZE_MAX - 1)) {
+    return NULL;
+  }
+  n++;
+  const char *buf = malloc(n);
+  if (!buf) {
+    return NULL;
+  }
+  extism_load_input_sz(buf, n);
+  if (outSize) {
+    *outSize = n;
+  }
+  return buf;
+}
+
+#else
+static size_t extism_strlen(const char *sz) {
+  size_t len;
+  for (len = 0; sz[len] != '\0'; len++) {
+  }
+  return len;
+}
+#endif
+
+// Allocate a buffer in Extism memory and copy string data into it
+// copied string is NOT null terminated
+static ExtismPointer extism_alloc_buf_from_sz(const char *sz) {
+  return extism_alloc_buf(sz, extism_strlen(sz));
 }
 
 typedef enum {
