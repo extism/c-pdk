@@ -4,8 +4,7 @@ This project contains a tool that can be used to create [Extism Plug-ins](https:
 
 ## Installation
 
-Since the Extism host provides these functions, all that's required to build a plugin with the Extism C PDK is the [extism-pdk.h](https://github.com/extism/c-pdk/blob/main/extism-pdk.h) header file. This can be copied into
-your project, or you can add the repo as a Git submodule:
+The Extism C PDK is a single header library. Just copy [extism-pdk.h](https://github.com/extism/c-pdk/blob/main/extism-pdk.h) into your project or add this repo as a Git submodule:
 
 ```shell
 git submodule add https://github.com/extism/c-pdk extism-pdk
@@ -21,6 +20,7 @@ The first thing you should understand is creating an export.
 Let's write a simple program that exports a `greet` function which will take a name as a string and return a greeting string. Paste this into a file `plugin.c`:
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdint.h>
 
@@ -79,6 +79,7 @@ extism call plugin.wasm greet --input="Benjamin"
 We catch any exceptions thrown and return them as errors to the host. Suppose we want to re-write our greeting module to never greet Benjamins:
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -145,6 +146,7 @@ Configs are key-value pairs that can be passed in by the host when creating a
 plug-in. These can be useful to statically configure the plug-in with some data that exists across every function call. Here is a trivial example using `extism_config_get`:
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -204,6 +206,7 @@ host has loaded and not freed the plug-in.
 You can use `extism_var_get`, and `extism_var_set` to manipulate vars:
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdint.h>
 
@@ -242,6 +245,7 @@ int32_t EXTISM_EXPORTED_FUNCTION(count) {
 The `extism_log*` functions can be used to emit logs:
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdint.h>
 
@@ -273,6 +277,7 @@ extism call plugin.wasm log_stuff --log-level=info
 HTTP calls can be made using `extism_http_request`: 
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdint.h>
 #include <string.h>
@@ -327,6 +332,7 @@ IMPORT("my_module", "a_python_func") extern ExtismPointer a_python_func(ExtismPo
 To call this function, we pass an Extism pointer and receive one back:
 
 ```c
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 #include <stdint.h>
 
@@ -387,6 +393,21 @@ python3 app.py
 # => Hello from Python!
 # => An argument to send to Python!
 ```
+
+## Building
+
+One source file must contain the implementation:
+
+```c
+#define EXTISM_IMPLEMENTATION
+#include "extism-pdk.h"
+```
+
+All other source files using the pdk must include the header without `#define EXTISM_IMPLEMENTATION`
+
+The C PDK does not require building with `libc`, but additional functions can be enabled when `libc` is available. `#define EXTISM_USE_LIBC` in each file before including the pdk (everywhere it is included) or, when compiling, pass it as a flag to clang: `-D EXTISM_USE_LIBC`
+
+The C PDK may be used from C++, however, the implementation must be built with a C compiler. See `cplusplus` in `tests/Makefile` for an example.
 
 ## Exports (details)
 

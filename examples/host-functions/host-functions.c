@@ -1,8 +1,9 @@
+#define EXTISM_IMPLEMENTATION
 #include "../../extism-pdk.h"
 
 #include <stdio.h>
 
-IMPORT("extism:host/user", "hello_world")
+EXTISM_IMPORT("extism:host/user", "hello_world")
 extern uint64_t hello_world(uint64_t);
 
 int32_t EXTISM_EXPORTED_FUNCTION(count_vowels) {

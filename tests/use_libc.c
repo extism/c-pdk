@@ -1,5 +1,7 @@
 #define EXTISM_USE_LIBC
+#define EXTISM_IMPLEMENTATION
 #include "util.h"
+#include <stdlib.h>
 
 EXTISM_EXPORT_AS("run_test") int32_t run_test(void) {
   void *input = extism_load_input_dup(NULL);
