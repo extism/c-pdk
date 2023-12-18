@@ -1,3 +1,4 @@
+#define EXTISM_IMPLEMENTATION
 #include "util.h"
 #include <string.h>
 

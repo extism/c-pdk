@@ -1,3 +1,4 @@
+#define EXTISM_IMPLEMENTATION
 #include "../../extism-pdk.h"
 
 #include <stdio.h>

@@ -1,3 +1,4 @@
+#define EXTISM_IMPLEMENTATION
 #include "util.h"
 
 EXTISM_EXPORT_AS("run_test") int32_t run_test(void) {

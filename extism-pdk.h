@@ -1,4 +1,9 @@
-#pragma once
+#ifndef extism_pdk_h
+#define extism_pdk_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -76,9 +81,71 @@ extern void extism_log_warn(const ExtismPointer);
 EXTISM_IMPORT_ENV("log_error")
 extern void extism_log_error(const ExtismPointer);
 
-// Load data from Extism memory
-// Does not verify load is in bounds
-static void extism_load(const ExtismPointer offs, void *dest, const size_t n) {
+// Load data from Extism memory, does not verify load is in bounds
+void extism_load(const ExtismPointer offs, void *dest, const size_t n);
+
+// Load data from input buffer, verifies load is inbounds
+bool extism_load_input(void *dest, const size_t n);
+
+// Load n-1 bytes from input buffer and zero terminate
+// Verifies load is inbounds
+bool extism_load_input_sz(char *dest, const size_t n);
+
+// Copy data into Extism memory
+void extism_store(ExtismPointer offs, const void *buffer, const size_t length);
+
+// Allocate a buffer in Extism memory and copy into it
+ExtismPointer extism_alloc_buf(const void *src, const size_t n);
+
+__attribute__((
+    deprecated("Use extism_alloc_buf instead."))) static inline ExtismPointer
+extism_alloc_string(const char *s, const size_t n) {
+  return extism_alloc_buf(s, n);
+}
+
+#ifdef EXTISM_USE_LIBC
+// get the input length (n) and malloc(n), load n bytes from Extism memory
+// into it. If outSize is provided, set it to n
+void *extism_load_input_dup(size_t *outSize);
+
+// get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes
+// from Extism memory into it. Zero terminate. If outSize is provided, set it
+// to n
+void *extism_load_input_sz_dup(size_t *outSize);
+
+#endif // EXTISM_USE_LIBC
+
+// Allocate a buffer in Extism memory and copy string data into it
+// copied string is NOT null terminated
+ExtismPointer extism_alloc_buf_from_sz(const char *sz);
+
+typedef enum {
+  ExtismLogInfo,
+  ExtismLogDebug,
+  ExtismLogWarn,
+  ExtismLogError,
+} ExtismLog;
+
+// Write to Extism log
+void extism_log(const char *s, const size_t len, const ExtismLog level);
+
+#ifdef __cplusplus
+}
+#endif
+#endif // extism_pdk_h
+
+// avoid greying out the implementation section
+#if defined(Q_CREATOR_RUN) || defined(__INTELLISENSE__) ||                     \
+    defined(_CDT_PARSER__)
+#define EXTISM_IMPLEMENTATION
+#endif
+
+#ifdef EXTISM_IMPLEMENTATION
+#ifndef extism_pdk_c
+#define extism_pdk_c
+
+// Load data from Extism memory, does not verify load is in bounds
+void extism_load(const ExtismPointer offs, void *dest, const size_t n) {
   const size_t chunk_count = n >> 3;
   uint64_t *i64_buffer = dest;
   for (size_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
@@ -93,8 +160,7 @@ static void extism_load(const ExtismPointer offs, void *dest, const size_t n) {
   }
 }
 
-// Load data from input buffer
-// Does not verify load is inbounds
+// Load data from input buffer, does not verify load is inbounds
 static void extism_load_input_unsafe(void *dest, const size_t n) {
   const size_t chunk_count = n >> 3;
   uint64_t *i64_buffer = dest;
@@ -110,9 +176,8 @@ static void extism_load_input_unsafe(void *dest, const size_t n) {
   }
 }
 
-// Load data from input buffer
-// Verifies load is inbounds
-static bool extism_load_input(void *dest, const size_t n) {
+// Load data from input buffer, verifies load is inbounds
+bool extism_load_input(void *dest, const size_t n) {
   const uint64_t input_len = extism_input_length();
   if (n > input_len) {
     return false;
@@ -130,7 +195,7 @@ static void extism_load_input_sz_unsafe(char *dest, const size_t n) {
 
 // Load n-1 bytes from input buffer and zero terminate
 // Verifies load is inbounds
-static bool extism_load_input_sz(char *dest, const size_t n) {
+bool extism_load_input_sz(char *dest, const size_t n) {
   const uint64_t input_len = extism_input_length();
   if ((n - 1) > input_len) {
     return false;
@@ -140,8 +205,7 @@ static bool extism_load_input_sz(char *dest, const size_t n) {
 }
 
 // Copy data into Extism memory
-static void extism_store(ExtismPointer offs, const void *buffer,
-                         const size_t length) {
+void extism_store(ExtismPointer offs, const void *buffer, const size_t length) {
   const size_t chunk_count = length >> 3;
   const uint64_t *i64_buffer = buffer;
   for (size_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
@@ -157,16 +221,10 @@ static void extism_store(ExtismPointer offs, const void *buffer,
 }
 
 // Allocate a buffer in Extism memory and copy into it
-static ExtismPointer extism_alloc_buf(const void *src, const size_t n) {
+ExtismPointer extism_alloc_buf(const void *src, const size_t n) {
   ExtismPointer ptr = extism_alloc(n);
   extism_store(ptr, src, n);
   return ptr;
-}
-
-__attribute__((
-    deprecated("Use extism_alloc_buf instead."))) static inline ExtismPointer
-extism_alloc_string(const char *s, const size_t n) {
-  return extism_alloc_buf(s, n);
 }
 
 #ifdef EXTISM_USE_LIBC
@@ -175,9 +233,9 @@ extism_alloc_string(const char *s, const size_t n) {
 
 #define extism_strlen strlen
 
-// get the input length (n) and malloc(n), load n bytes from Extism memory into
-// it. If outSize is provided, set it to n
-static void *extism_load_input_dup(size_t *outSize) {
+// get the input length (n) and malloc(n), load n bytes from Extism memory
+// into it. If outSize is provided, set it to n
+void *extism_load_input_dup(size_t *outSize) {
   const uint64_t n = extism_input_length();
   if (n > SIZE_MAX) {
     return NULL;
@@ -193,9 +251,10 @@ static void *extism_load_input_dup(size_t *outSize) {
   return buf;
 }
 
-// get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes from
-// Extism memory into it. Zero terminate. If outSize is provided, set it to n
-static void *extism_load_input_sz_dup(size_t *outSize) {
+// get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes
+// from Extism memory into it. Zero terminate. If outSize is provided, set it
+// to n
+void *extism_load_input_sz_dup(size_t *outSize) {
   uint64_t n = extism_input_length();
   if (n > (SIZE_MAX - 1)) {
     return NULL;
@@ -223,19 +282,12 @@ static size_t extism_strlen(const char *sz) {
 
 // Allocate a buffer in Extism memory and copy string data into it
 // copied string is NOT null terminated
-static ExtismPointer extism_alloc_buf_from_sz(const char *sz) {
+ExtismPointer extism_alloc_buf_from_sz(const char *sz) {
   return extism_alloc_buf(sz, extism_strlen(sz));
 }
 
-typedef enum {
-  ExtismLogInfo,
-  ExtismLogDebug,
-  ExtismLogWarn,
-  ExtismLogError,
-} ExtismLog;
-
 // Write to Extism log
-static void extism_log(const char *s, const size_t len, const ExtismLog level) {
+void extism_log(const char *s, const size_t len, const ExtismLog level) {
   ExtismPointer ptr = extism_alloc(len);
   extism_store(ptr, s, len);
   switch (level) {
@@ -254,3 +306,6 @@ static void extism_log(const char *s, const size_t len, const ExtismLog level) {
   }
   extism_free(ptr);
 }
+
+#endif // extism_pdk_c
+#endif // EXTISM_IMPLEMENTATION
