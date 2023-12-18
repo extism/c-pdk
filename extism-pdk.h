@@ -129,6 +129,9 @@ typedef enum {
 // Write to Extism log
 void extism_log(const char *s, const size_t len, const ExtismLog level);
 
+// Write zero-terminated string to Extism log
+void extism_log_sz(const char *s, const ExtismLog level);
+
 #ifdef __cplusplus
 }
 #endif
@@ -305,6 +308,12 @@ void extism_log(const char *s, const size_t len, const ExtismLog level) {
     break;
   }
   extism_free(ptr);
+}
+
+// Write zero-terminated string to Extism log
+void extism_log_sz(const char *s, const ExtismLog level) {
+  const size_t len = extism_strlen(s);
+  extism_log(s, len, level);
 }
 
 #endif // extism_pdk_c
