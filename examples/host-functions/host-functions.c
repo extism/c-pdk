@@ -1,10 +1,11 @@
+#define EXTISM_ENABLE_LOW_LEVEL_API
 #define EXTISM_IMPLEMENTATION
 #include "../../extism-pdk.h"
 
 #include <stdio.h>
 
 EXTISM_IMPORT("extism:host/user", "hello_world")
-extern uint64_t hello_world(uint64_t);
+extern ExtismHandle hello_world(ExtismHandle);
 
 int32_t EXTISM_EXPORTED_FUNCTION(count_vowels) {
   uint64_t length = extism_input_length();
@@ -25,9 +26,9 @@ int32_t EXTISM_EXPORTED_FUNCTION(count_vowels) {
 
   char out[128];
   int n = snprintf(out, 128, "{\"count\": %lld}", count);
-  uint64_t offs_ = extism_alloc(n);
-  extism_store(offs_, (const uint8_t *)out, n);
-  offs_ = hello_world(offs_);
-  extism_output_set(offs_, extism_length(offs_));
+  ExtismHandle buf = extism_alloc(n);
+  extism_store_to_handle(buf, 0, out, n);
+  buf = hello_world(buf);
+  extism_output_set(buf, extism_length(buf));
   return 0;
 }

@@ -1,3 +1,4 @@
+#define EXTISM_ENABLE_LOW_LEVEL_API
 #define EXTISM_IMPLEMENTATION
 #include "../../extism-pdk.h"
 
@@ -19,9 +20,9 @@ int32_t EXTISM_EXPORTED_FUNCTION(count_vowels) {
   char out[128];
   int n = snprintf(out, 128, "{\"count\": %llu}", count);
 
-  uint64_t offs_ = extism_alloc(n);
-  extism_store(offs_, (const uint8_t *)out, n);
-  extism_output_set(offs_, n);
+  ExtismHandle buf = extism_alloc(n);
+  extism_store(buf, out, n);
+  extism_output_set(buf, n);
 
   return 0;
 }
