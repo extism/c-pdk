@@ -24,8 +24,6 @@ typedef uint64_t ExtismHandle;
 #define EXTISM_IMPORT_USER(b)                                                  \
   __attribute__((import_module(EXTISM_USER_MODULE), import_name(b)))
 
-EXTISM_IMPORT_ENV("input_length")
-extern uint64_t extism_input_length(void);
 EXTISM_IMPORT_ENV("length")
 extern uint64_t extism_length(const ExtismHandle);
 EXTISM_IMPORT_ENV("alloc")
@@ -60,17 +58,34 @@ extern void extism_log_warn(const ExtismHandle);
 EXTISM_IMPORT_ENV("log_error")
 extern void extism_log_error(const ExtismHandle);
 
+EXTISM_IMPORT_ENV("input_offset")
+extern ExtismHandle extism_input_offset(void);
+
+static inline uint64_t extism_input_length(void) {
+  return extism_length(extism_input_offset());
+}
+
 // Load data from Extism memory, verifies load is inbounds
 bool extism_load_from_handle(const ExtismHandle src, const uint64_t src_offset,
                              void *dest, const size_t n);
 
 // Load data from input buffer, verifies load is inbounds
-bool extism_load_input(const uint64_t src_offset, void *dest, const size_t n);
+static inline bool extism_load_input(const uint64_t src_offset, void *dest,
+                                     const size_t n) {
+  return extism_load_from_handle(extism_input_offset(), src_offset, dest, n);
+}
+
+// Load n-1 bytes and zero terminate
+// Verifies load is inbounds
+bool extism_load_sz(const ExtismHandle src, uint64_t src_offset, char *dest,
+                    const size_t n);
 
 // Load n-1 bytes from input buffer and zero terminate
 // Verifies load is inbounds
-bool extism_load_input_sz(const uint64_t src_offset, char *dest,
-                          const size_t n);
+static inline bool extism_load_input_sz(const uint64_t src_offset, char *dest,
+                                        const size_t n) {
+  return extism_load_sz(extism_input_offset(), src_offset, dest, n);
+}
 
 // Copy data into Extism memory, verifies store is in bounds
 bool extism_store_to_handle(ExtismHandle dest, const uint64_t dest_offset,
@@ -86,14 +101,27 @@ extism_alloc_string(const char *s, const size_t n) {
 }
 
 #ifdef EXTISM_USE_LIBC
+// get the length (n) and malloc(n), load n bytes from Extism memory
+// into it. If outSize is provided, set it to n
+void *extism_load_dup(const ExtismHandle h, size_t *outSize);
+
 // get the input length (n) and malloc(n), load n bytes from Extism memory
 // into it. If outSize is provided, set it to n
-void *extism_load_input_dup(size_t *outSize);
+static inline void *extism_load_input_dup(size_t *outSize) {
+  return extism_load_dup(extism_input_offset(), outSize);
+}
+
+// get the length, add 1 to it to get n. malloc(n), load n - 1 bytes
+// from Extism memory into it. Zero terminate. If outSize is provided, set it
+// to n
+void *extism_load_sz_dup(const ExtismHandle h, size_t *outSize);
 
 // get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes
 // from Extism memory into it. Zero terminate. If outSize is provided, set it
 // to n
-void *extism_load_input_sz_dup(size_t *outSize);
+static inline void *extism_load_input_sz_dup(size_t *outSize) {
+  return extism_load_sz_dup(extism_input_offset(), outSize);
+}
 
 #endif // EXTISM_USE_LIBC
 
@@ -183,14 +211,9 @@ extern uint64_t __extism_load_u64(const ExtismPointer);
 // Copy data into Extism memory, does not verify store is inbounds
 #define extism_store __extism_store
 
-// Load data from input buffer, does not verify load is inbounds
-void extism_load_input_unsafe(const uint64_t src_offset, void *dest,
-                              const size_t n);
-
-// Load n-1 bytes from input buffer and zero terminate
+// Load n-1 bytes and zero terminate
 // Does not verify load is inbounds
-void extism_load_input_sz_unsafe(const uint64_t src_offset, char *dest,
-                                 const size_t n);
+void extism_load_sz_unsafe(const ExtismPointer src, char *dest, const size_t n);
 
 #else
 #undef ExtismPointer
@@ -240,52 +263,23 @@ bool extism_load_from_handle(const ExtismHandle src, const uint64_t src_offset,
   return true;
 }
 
-// Load data from input buffer, does not verify load is inbounds
-EXTISM_LL_API void extism_load_input_unsafe(const uint64_t src_offset,
-                                            void *dest, const size_t n) {
-  const size_t chunk_count = n >> 3;
-  uint64_t *i64_buffer = dest;
-  for (size_t chunk_idx = 0; chunk_idx < chunk_count; chunk_idx++) {
-    i64_buffer[chunk_idx] =
-        __extism_input_load_u64(src_offset + (chunk_idx << 3));
-  }
-
-  size_t remainder_offset = chunk_count << 3;
-  const size_t remainder_end = remainder_offset + (n & 7);
-  for (uint8_t *u8_buffer = dest; remainder_offset < remainder_end;
-       remainder_offset++) {
-    u8_buffer[remainder_offset] =
-        __extism_input_load_u8(src_offset + remainder_offset);
-  }
-}
-
-// Load data from input buffer, verifies load is inbounds
-bool extism_load_input(const uint64_t src_offset, void *dest, const size_t n) {
-  const uint64_t input_len = extism_input_length();
-  if ((src_offset + n) > input_len) {
-    return false;
-  }
-  extism_load_input_unsafe(src_offset, dest, n);
-  return true;
-}
-
-// Load n-1 bytes from input buffer and zero terminate
+// Load n-1 bytes and zero terminate
 // Does not verify load is inbounds
-EXTISM_LL_API void extism_load_input_sz_unsafe(const uint64_t src_offset,
-                                               char *dest, const size_t n) {
-  extism_load_input_unsafe(src_offset, dest, n - 1);
+EXTISM_LL_API void extism_load_sz_unsafe(const ExtismPointer src, char *dest,
+                                         const size_t n) {
+  __extism_load(src, dest, n - 1);
   dest[n - 1] = '\0';
 }
 
-// Load n-1 bytes from input buffer and zero terminate
+// Load n-1 bytes and zero terminate
 // Verifies load is inbounds
-bool extism_load_input_sz(const uint64_t src_offset, char *dest,
-                          const size_t n) {
-  const uint64_t input_len = extism_input_length();
-  if ((src_offset + n - 1) > input_len) {
+bool extism_load_sz(const ExtismHandle src, uint64_t src_offset, char *dest,
+                    const size_t n) {
+  const uint64_t len = extism_length(src);
+  if ((src_offset + n - 1) > len) {
     return false;
   }
-  extism_load_input_sz_unsafe(src_offset, dest, n);
+  extism_load_sz_unsafe(src + src_offset, dest, n);
   return true;
 }
 
@@ -330,10 +324,10 @@ ExtismHandle extism_alloc_buf(const void *src, const size_t n) {
 
 #define extism_strlen strlen
 
-// get the input length (n) and malloc(n), load n bytes from Extism memory
+// get the length (n) and malloc(n), load n bytes from Extism memory
 // into it. If outSize is provided, set it to n
-void *extism_load_input_dup(size_t *outSize) {
-  const uint64_t n = extism_input_length();
+void *extism_load_dup(const ExtismHandle h, size_t *outSize) {
+  const uint64_t n = extism_length(h);
   if (n > SIZE_MAX) {
     return NULL;
   }
@@ -341,18 +335,18 @@ void *extism_load_input_dup(size_t *outSize) {
   if (!buf) {
     return NULL;
   }
-  extism_load_input_unsafe(0, buf, n);
+  __extism_load(h, buf, n);
   if (outSize) {
     *outSize = n;
   }
   return buf;
 }
 
-// get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes
+// get the length, add 1 to it to get n. malloc(n), load n - 1 bytes
 // from Extism memory into it. Zero terminate. If outSize is provided, set it
 // to n
-void *extism_load_input_sz_dup(size_t *outSize) {
-  uint64_t n = extism_input_length();
+void *extism_load_sz_dup(const ExtismHandle h, size_t *outSize) {
+  uint64_t n = extism_length(h);
   if (n > (SIZE_MAX - 1)) {
     return NULL;
   }
@@ -361,7 +355,7 @@ void *extism_load_input_sz_dup(size_t *outSize) {
   if (!buf) {
     return NULL;
   }
-  extism_load_input_sz_unsafe(0, buf, n);
+  extism_load_sz_unsafe(h, buf, n);
   if (outSize) {
     *outSize = n;
   }
