@@ -61,9 +61,9 @@ extern void extism_log_error(const ExtismHandle);
 EXTISM_IMPORT_ENV("input_offset")
 extern ExtismHandle extism_input_offset(void);
 
-static inline uint64_t extism_input_length(void) {
-  return extism_length(extism_input_offset());
-}
+EXTISM_IMPORT_ENV("input_length")
+extern uint64_t extism_input_length(void);
+// extism_length(extism_input_offset()); is also valid
 
 // Load data from Extism memory, verifies load is inbounds
 bool extism_load_from_handle(const ExtismHandle src, const uint64_t src_offset,
