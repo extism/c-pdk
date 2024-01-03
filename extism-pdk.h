@@ -24,7 +24,7 @@ typedef uint64_t ExtismHandle;
 #define EXTISM_IMPORT_USER(b)                                                  \
   __attribute__((import_module(EXTISM_USER_MODULE), import_name(b)))
 
-EXTISM_IMPORT_ENV("length")
+EXTISM_IMPORT_ENV("length_unsafe")
 extern uint64_t extism_length(const ExtismHandle);
 EXTISM_IMPORT_ENV("alloc")
 extern ExtismHandle extism_alloc(const uint64_t);
@@ -214,6 +214,11 @@ extern uint64_t __extism_load_u64(const ExtismPointer);
 // Load n-1 bytes and zero terminate
 // Does not verify load is inbounds
 void extism_load_sz_unsafe(const ExtismPointer src, char *dest, const size_t n);
+
+// Returns 0 when the pointer doesn't refer to the start of
+// the data section of a memory block.
+EXTISM_IMPORT_ENV("length")
+extern uint64_t extism_length_safe(const ExtismPointer);
 
 #else
 #undef ExtismPointer
