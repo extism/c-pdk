@@ -28,6 +28,8 @@ EXTISM_IMPORT_ENV("input_length")
 extern uint64_t extism_input_length(void);
 EXTISM_IMPORT_ENV("length")
 extern uint64_t extism_length(const ExtismPointer);
+EXTISM_IMPORT_ENV("length_unsafe")
+extern uint64_t extism_length_unsafe(const ExtismPointer);
 EXTISM_IMPORT_ENV("alloc")
 extern ExtismPointer extism_alloc(const uint64_t);
 EXTISM_IMPORT_ENV("free")
