@@ -1,3 +1,4 @@
+#define EXTISM_ENABLE_LOW_LEVEL_API
 #include "util.h"
 
 #define NPAGES0 2
@@ -5,7 +6,7 @@
 #define PAGE1 65539
 
 int32_t EXTISM_EXPORTED_FUNCTION(run_test) {
-  ExtismPointer buf[NPAGES0][NPAGES1];
+  ExtismHandle buf[NPAGES0][NPAGES1];
   for (int i = 0; i < NPAGES0; i++) {
     for (int j = 0; j < NPAGES1; j++) {
       buf[i][j] = extism_alloc(PAGE1);
