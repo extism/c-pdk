@@ -114,12 +114,12 @@ static inline void *extism_load_input_dup(size_t *outSize) {
 // get the length, add 1 to it to get n. malloc(n), load n - 1 bytes
 // from Extism memory into it. Zero terminate. If outSize is provided, set it
 // to n
-void *extism_load_sz_dup(const ExtismHandle h, size_t *outSize);
+char *extism_load_sz_dup(const ExtismHandle h, size_t *outSize);
 
 // get the input length, add 1 to it to get n. malloc(n), load n - 1 bytes
 // from Extism memory into it. Zero terminate. If outSize is provided, set it
 // to n
-static inline void *extism_load_input_sz_dup(size_t *outSize) {
+static inline char *extism_load_input_sz_dup(size_t *outSize) {
   return extism_load_sz_dup(extism_input_offset(), outSize);
 }
 
@@ -155,6 +155,31 @@ void extism_output_buf(const void *src, const size_t n);
 
 // set output to extism_alloc_buf_from_sz
 void extism_output_buf_from_sz(const char *sz);
+
+// output an error from a buf
+void extism_error_set_buf(const char *message, const size_t messageLen);
+
+// output an error from a sz
+void extism_error_set_buf_from_sz(const char *message);
+
+// get a config var from a buf key
+ExtismHandle extism_config_get_buf(const char *name, const size_t nameLen);
+
+// get a config var from a sz key
+ExtismHandle extism_config_get_buf_from_sz(const char *name);
+
+// get a var from a buf key
+ExtismHandle extism_var_get_buf(const char *name, const size_t nameLen);
+
+// get a var from a sz key
+ExtismHandle extism_var_get_buf_from_sz(const char *name);
+
+// store a var from a buf key
+void extism_var_set_buf(const char *name, const size_t nameLen,
+                        const ExtismHandle value);
+
+// store a var from a sz key
+void extism_var_set_buf_from_sz(const char *name, const ExtismHandle value);
 
 #ifdef __cplusplus
 }
@@ -350,7 +375,7 @@ void *extism_load_dup(const ExtismHandle h, size_t *outSize) {
 // get the length, add 1 to it to get n. malloc(n), load n - 1 bytes
 // from Extism memory into it. Zero terminate. If outSize is provided, set it
 // to n
-void *extism_load_sz_dup(const ExtismHandle h, size_t *outSize) {
+char *extism_load_sz_dup(const ExtismHandle h, size_t *outSize) {
   uint64_t n = extism_length(h);
   if (n > (SIZE_MAX - 1)) {
     return NULL;
@@ -435,6 +460,60 @@ void extism_output_buf(const void *src, const size_t n) {
 void extism_output_buf_from_sz(const char *sz) {
   const size_t n = extism_strlen(sz);
   extism_output_buf(sz, n);
+}
+
+// output an error from a buf
+void extism_error_set_buf(const char *message, const size_t messageLen) {
+  ExtismHandle handle = extism_alloc_buf(message, messageLen);
+  extism_error_set(handle);
+}
+
+// output an error from a sz
+void extism_error_set_buf_from_sz(const char *message) {
+  const size_t len = extism_strlen(message);
+  extism_error_set_buf(message, len);
+}
+
+// get a config var from a buf key
+ExtismHandle extism_config_get_buf(const char *name, const size_t nameLen) {
+  ExtismHandle key = extism_alloc_buf(name, nameLen);
+  ExtismHandle value = extism_config_get(key);
+  extism_free(key);
+  return value;
+}
+
+// get a config var from a sz key
+ExtismHandle extism_config_get_buf_from_sz(const char *name) {
+  const size_t len = extism_strlen(name);
+  return extism_config_get_buf(name, len);
+}
+
+// get a var from a buf key
+ExtismHandle extism_var_get_buf(const char *name, const size_t nameLen) {
+  ExtismHandle key = extism_alloc_buf(name, nameLen);
+  ExtismHandle value = extism_var_get(key);
+  extism_free(key);
+  return value;
+}
+
+// get a var from a sz key
+ExtismHandle extism_var_get_buf_from_sz(const char *name) {
+  const size_t len = extism_strlen(name);
+  return extism_var_get_buf(name, len);
+}
+
+// store a var from a buf key
+void extism_var_set_buf(const char *name, const size_t nameLen,
+                        const ExtismHandle value) {
+  ExtismHandle key = extism_alloc_buf(name, nameLen);
+  extism_var_set(key, value);
+  extism_free(key);
+}
+
+// store a var from a sz key
+void extism_var_set_buf_from_sz(const char *name, const ExtismHandle value) {
+  const size_t len = extism_strlen(name);
+  extism_var_set_buf(name, len, value);
 }
 
 #ifndef EXTISM_ENABLE_LOW_LEVEL_API
