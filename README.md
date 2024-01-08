@@ -52,6 +52,8 @@ int32_t EXTISM_EXPORTED_FUNCTION(greet) {
 
 The `EXTISM_EXPORTED_FUNCTION` macro simplifies declaring an Extism function that will be exported to the host.
 
+The `load`, `store`, and `alloc` functions are used to load from, store to and allocate Extism memory. Extism eases passing data to and from the host and the plug-in by managing memory isolated from both the host and the plug-in/Wasm module. For more details, see the [Memory](https://extism.org/docs/concepts/memory) concept page.
+
 Since we don't need any system access for this, we can compile this directly with clang:
 
 ```shell
