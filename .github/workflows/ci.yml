@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/libextism
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install WASI SDK
         run: |
