@@ -426,7 +426,6 @@ void extism_log(const char *s, const size_t len, const ExtismLog level) {
     extism_log_error(buf);
     break;
   }
-  extism_free(buf);
 }
 
 // Write zero-terminated string to Extism log
@@ -479,7 +478,6 @@ void extism_error_set_buf_from_sz(const char *message) {
 ExtismHandle extism_config_get_buf(const char *name, const size_t nameLen) {
   ExtismHandle key = extism_alloc_buf(name, nameLen);
   ExtismHandle value = extism_config_get(key);
-  extism_free(key);
   return value;
 }
 
@@ -493,7 +491,6 @@ ExtismHandle extism_config_get_buf_from_sz(const char *name) {
 ExtismHandle extism_var_get_buf(const char *name, const size_t nameLen) {
   ExtismHandle key = extism_alloc_buf(name, nameLen);
   ExtismHandle value = extism_var_get(key);
-  extism_free(key);
   return value;
 }
 
@@ -508,7 +505,6 @@ void extism_var_set_buf(const char *name, const size_t nameLen,
                         const ExtismHandle value) {
   ExtismHandle key = extism_alloc_buf(name, nameLen);
   extism_var_set(key, value);
-  extism_free(key);
 }
 
 // store a var from a sz key

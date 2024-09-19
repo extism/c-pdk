@@ -159,7 +159,6 @@ static const char Greeting[] = "Hello, ";
 int32_t EXTISM_EXPORTED_FUNCTION(greet) {
   ExtismHandle key = extism_alloc_buf_from_sz("user");
   ExtismHandle value = extism_config_get(key);
-  extism_free(key);
 
   if (value == 0) {
     ExtismHandle err = extism_alloc_buf_from_sz("Invalid key");
@@ -232,11 +231,6 @@ int32_t EXTISM_EXPORTED_FUNCTION(count) {
 
   // Set the variable
   extism_var_set(key, value);
-
-  // Free key/value, vars are stored on the host side so they remain
-  // available between calls
-  extism_free(value);
-  extism_free(key);
 
   return 0;
 }
