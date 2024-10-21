@@ -61,6 +61,10 @@ EXTISM_IMPORT_ENV("log_warn")
 extern void extism_log_warn(const ExtismHandle);
 EXTISM_IMPORT_ENV("log_error")
 extern void extism_log_error(const ExtismHandle);
+EXTISM_IMPORT_ENV("log_trace")
+extern void extism_log_trace(const ExtismHandle);
+EXTISM_IMPORT_ENV("get_log_level")
+extern int32_t extism_get_log_level();
 
 EXTISM_IMPORT_ENV("input_offset")
 extern ExtismHandle extism_input_offset(void);
@@ -134,8 +138,9 @@ static inline char *extism_load_input_sz_dup(size_t *outSize) {
 ExtismHandle extism_alloc_buf_from_sz(const char *sz);
 
 typedef enum {
-  ExtismLogInfo,
+  ExtismLogTrace,
   ExtismLogDebug,
+  ExtismLogInfo,
   ExtismLogWarn,
   ExtismLogError,
 } ExtismLog;
@@ -413,6 +418,10 @@ ExtismHandle extism_alloc_buf_from_sz(const char *sz) {
 
 // Write to Extism log
 void extism_log(const char *s, const size_t len, const ExtismLog level) {
+  if (level < extism_get_log_level()) {
+    return;
+  }
+
   ExtismHandle buf = extism_alloc(len);
   __extism_store(buf, s, len);
   switch (level) {
@@ -427,6 +436,9 @@ void extism_log(const char *s, const size_t len, const ExtismLog level) {
     break;
   case ExtismLogError:
     extism_log_error(buf);
+    break;
+  case ExtismLogTrace:
+    extism_log_trace(buf);
     break;
   }
 }
