@@ -50,6 +50,9 @@ extern ExtismHandle extism_http_request(const ExtismHandle, const ExtismHandle);
 EXTISM_IMPORT_ENV("http_status_code")
 extern int32_t extism_http_status_code(void);
 
+EXTISM_IMPORT_ENV("http_headers")
+extern ExtismHandle extism_http_headers(void);
+
 EXTISM_IMPORT_ENV("log_info")
 extern void extism_log_info(const ExtismHandle);
 EXTISM_IMPORT_ENV("log_debug")
